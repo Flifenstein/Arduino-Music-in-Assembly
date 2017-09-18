@@ -1,0 +1,233 @@
+.device atmega168  ; what type of processor do we use? don’t change!
+.equ DDRB = 4   ; address of data-direction register; don’t change!
+.equ PORTB = 5  ; address of output port register; don’t change!
+
+
+ldi r16,$10
+out DDRB,r16	
+
+ldi r17,$0f	;second timer length
+ldi r19,$ff	;currentnote
+ldi r18,$00	;0 value for buzzer
+ldi r20,$ff	;pausetimer
+ldi r21,$05	;note
+ldi r22,$00	;note timeout
+ldi r23,$00	;secondary note timeout
+ldi r24,$0f	;desired note timout
+ldi r25,$00	;third not timeout
+out PORTB,r18
+
+;r21 note height
+;r24 note length
+;r20 pause length
+
+mainloop:
+
+call G
+call G
+call D
+call D
+call E
+call E
+call longD
+call C
+call C
+call B
+call B
+call A
+call A
+call longG
+call D
+call D
+call C
+call C
+call B
+call B
+call longA
+call D
+call D
+call C
+call C
+call B
+call B
+call longA
+call G
+call G
+call D
+call D
+call E
+call E
+call longD
+call G
+call G
+call B
+call B
+call A
+call A
+call longG
+
+
+rjmp ending
+
+longA:
+ldi r21,$0a
+ldi r24,$14
+call ontimer2
+ldi r20,$05
+call pause3
+ret
+
+longD:
+ldi r21,$05
+ldi r24,$14
+call ontimer2
+ldi r20,$05
+call pause3
+ret
+
+longG:
+ldi r21,$0c
+ldi r24,$14
+call ontimer2
+ldi r20,$05
+call pause3
+ret
+
+C:
+ldi r21,$06
+ldi r24,$0f
+call ontimer2
+ldi r20,$05
+call pause3
+ret
+
+G:
+ldi r21,$0c
+ldi r24,$0c
+call ontimer2
+ldi r20,$05
+call pause3
+ret
+
+A:
+ldi r21,$0a
+ldi r24,$0d
+call ontimer2
+ldi r20,$05
+call pause3
+ret
+
+F:
+ldi r21,$09
+ldi r24,$0e
+call ontimer2
+ldi r20,$05
+call pause3
+ret
+
+
+E:
+ldi r21,$03
+ldi r24,$0f
+call ontimer2
+ldi r20,$05
+call pause3
+ret
+
+D:
+ldi r21,$05
+ldi r24,$10
+call ontimer2
+ldi r20,$05
+call pause3
+ret
+
+B:
+ldi r21,$07
+ldi r24,$0f
+call ontimer2
+ldi r20,$05
+call pause3
+ret
+
+pause:
+subi r17,1
+cpi r17,0
+breq pause2
+rjmp pause	; 5 * 15 = 75 instructions
+
+pause2:
+subi r19,1
+cpi r19,0
+breq pause2done
+ldi r17,$ff
+rjmp pause	; 6 * 255 * 75 = instructions 114,750
+pause2done:
+rjmp pause3
+
+pause3:
+subi r20,1
+cpi r20,0
+breq pausedone
+ldi r19,$ff
+rjmp pause2	; 6 * 255 * 75 * 255 = instructions 2sec
+pausedone:
+ret
+
+ontimer:
+subi r17,1
+cpi r17,0
+breq ontimer2
+rjmp ontimer	; 5 * 15 = 75 instructions
+
+ontimer2:
+subi r19,1
+cpi r19,0
+breq on
+ldi r17,$0f
+rjmp ontimer	; 6 * 255 * 75 = instructions 114,750
+
+on:
+ldi r17,$0f
+mov r19,r21
+out PORTB,r16
+rjmp offtimer
+
+offtimer:
+subi r17,1
+cpi r17,0
+breq offtimer2
+rjmp offtimer
+
+offtimer2:
+subi r19,1
+cpi r19,0
+breq off
+ldi r17,$ff
+rjmp offtimer
+
+off:
+ldi r17,$0f
+mov r19,r20
+out PORTB,r18
+inc r22
+cp r22,r24
+breq reset22
+cp r23,r24
+breq reset23
+rjmp ontimer
+
+
+reset22:
+inc r23
+ldi r22,$00
+rjmp off
+
+reset23:
+inc r24
+ldi r23,$00
+ret
+
+ending:
+
+rjmp ending
